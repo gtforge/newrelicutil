@@ -42,6 +42,74 @@ func TestWrapHandler(t *testing.T) {
 	wh.ServeHTTP(resp, req)
 }
 
+func TestSegment(t *testing.T) {
+	ctx := context.Background()
+
+	want := newrelic.Segment{}
+	if have := newrelicutil.Segment(ctx); want != have {
+		t.Errorf("want %+v, have %+v", want, have)
+	}
+}
+
+func TestWithSegment(t *testing.T) {
+	nrapp := newApp()
+	txn := nrapp.StartTransaction("foo", nil, nil)
+	sgm := newrelic.StartSegment(txn, "bar")
+	ctx := context.Background()
+
+	ctx = newrelicutil.WithSegment(ctx, sgm)
+	if want, have := sgm, newrelicutil.Segment(ctx); want != have {
+		t.Errorf("want %+v, have %+v", want, have)
+	}
+}
+
+func TestExternalSegment(t *testing.T) {
+	ctx := context.Background()
+
+	want := newrelic.ExternalSegment{}
+	if have := newrelicutil.ExternalSegment(ctx); want != have {
+		t.Errorf("want %+v, have %+v", want, have)
+	}
+}
+
+func TestWithExternalSegment(t *testing.T) {
+	nrapp := newApp()
+	txn := nrapp.StartTransaction("foo", nil, nil)
+	sgm := newrelic.StartExternalSegment(txn, nil)
+	ctx := context.Background()
+
+	ctx = newrelicutil.WithExternalSegment(ctx, sgm)
+	if want, have := sgm, newrelicutil.ExternalSegment(ctx); want != have {
+		t.Errorf("want %+v, have %+v", want, have)
+	}
+}
+
+func TestDatastoreSegment(t *testing.T) {
+	ctx := context.Background()
+
+	want := newrelic.DatastoreSegment{}
+	if have := newrelicutil.DatastoreSegment(ctx); want.StartTime != have.StartTime {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+}
+
+func TestWithDatastoreSegment(t *testing.T) {
+	nrapp := newApp()
+	txn := nrapp.StartTransaction("foo", nil, nil)
+	sgm := newrelic.DatastoreSegment{
+		StartTime:  newrelic.StartSegmentNow(txn),
+		Product:    newrelic.DatastoreMySQL,
+		Collection: "my_table",
+		Operation:  "SELECT",
+	}
+	ctx := context.Background()
+
+	ctx = newrelicutil.WithDatastoreSegment(ctx, sgm)
+	if want, have := sgm, newrelicutil.DatastoreSegment(ctx); want.StartTime != have.StartTime {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+}
+
 func newApp() newrelic.Application {
 	config := newrelic.NewConfig("app_test", "")
 	config.Enabled = false
