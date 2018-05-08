@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  name = "github.com/gorilla/context"
+  packages = ["."]
+  revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
+  version = "v1.1"
+
+[[projects]]
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  revision = "53c1911da2b537f792e7cafcb446b05ffe33b996"
+  version = "v1.6.1"
+
+[[projects]]
   name = "github.com/newrelic/go-agent"
   packages = [".","internal","internal/cat","internal/jsonx","internal/logger","internal/sysinfo","internal/utilization"]
   revision = "f5bce3387232559bcbe6a5f8227c4bf508dac1ba"
@@ -10,6 +22,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4a7c9ceb65f8db4738e7eecf59a32b2c30265ed93547f500de49330e498b7204"
+  inputs-digest = "791f15edd375d52510cc2b454f096832af70f33878fed1acaf47cb8e8d09516f"
   solver-name = "gps-cdcl"
   solver-version = 1
