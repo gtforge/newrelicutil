@@ -6,113 +6,84 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/gettaxi/newrelicutil"
 	"github.com/newrelic/go-agent"
 )
 
 func TestTransaction(t *testing.T) {
-	ctx := context.Background()
-
-	if want, have := newrelic.Transaction(nil), newrelicutil.Transaction(ctx); want != have {
-		t.Errorf("want %+v, have %+v", want, have)
-	}
+	want := newrelic.Transaction(nil)
+	have := newrelicutil.Transaction(context.Background())
+	assert.Equal(t, want, have)
 }
 
 func TestWithTransaction(t *testing.T) {
-	nrapp := newApp()
-	txn := nrapp.StartTransaction("foo", nil, nil)
-	ctx := context.Background()
-
-	ctx = newrelicutil.WithTransaction(ctx, txn)
-	if want, have := txn, newrelicutil.Transaction(ctx); want != have {
-		t.Errorf("want %+v, have %+v", want, have)
-	}
+	txn := newApp(t).StartTransaction("foo", nil, nil)
+	ctx := newrelicutil.WithTransaction(context.Background(), txn)
+	assert.Equal(t, txn, newrelicutil.Transaction(ctx))
 }
 
 func TestWrapHandler(t *testing.T) {
-	nrapp := newApp()
 	h := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		if have := newrelicutil.Transaction(r.Context()); nil == have {
-			t.Errorf("want txn, have %+v", have)
-		}
+		assert.NotNil(t, newrelicutil.Transaction(r.Context()))
 	})
-	wh := newrelicutil.WrapHandler(nrapp, "foo", h)
+	wh := newrelicutil.WrapHandler(newApp(t), "foo", h)
 	req, _ := http.NewRequest("GET", "/", nil)
-	resp := httptest.NewRecorder()
-	wh.ServeHTTP(resp, req)
+	wh.ServeHTTP(httptest.NewRecorder(), req)
 }
 
 func TestSegment(t *testing.T) {
-	ctx := context.Background()
-
-	want := newrelic.Segment{}
-	if have := newrelicutil.Segment(ctx); want != have {
-		t.Errorf("want %+v, have %+v", want, have)
-	}
+	want := &newrelic.Segment{}
+	have := newrelicutil.Segment(context.Background())
+	assert.Equal(t, want, have)
 }
 
 func TestWithSegment(t *testing.T) {
-	nrapp := newApp()
-	txn := nrapp.StartTransaction("foo", nil, nil)
-	sgm := newrelic.StartSegment(txn, "bar")
-	ctx := context.Background()
-
-	ctx = newrelicutil.WithSegment(ctx, sgm)
-	if want, have := sgm, newrelicutil.Segment(ctx); want != have {
-		t.Errorf("want %+v, have %+v", want, have)
-	}
+	txn := newApp(t).StartTransaction("foo", nil, nil)
+	want := newrelic.StartSegment(txn, "bar")
+	ctx := newrelicutil.WithSegment(context.Background(), want)
+	have := newrelicutil.Segment(ctx)
+	assert.Equal(t, want, have)
 }
 
 func TestExternalSegment(t *testing.T) {
-	ctx := context.Background()
-
-	want := newrelic.ExternalSegment{}
-	if have := newrelicutil.ExternalSegment(ctx); want != have {
-		t.Errorf("want %+v, have %+v", want, have)
-	}
+	want := &newrelic.ExternalSegment{}
+	have := newrelicutil.ExternalSegment(context.Background())
+	assert.Equal(t, want, have)
 }
 
 func TestWithExternalSegment(t *testing.T) {
-	nrapp := newApp()
-	txn := nrapp.StartTransaction("foo", nil, nil)
-	sgm := newrelic.StartExternalSegment(txn, nil)
+	txn := newApp(t).StartTransaction("foo", nil, nil)
+	want := newrelic.StartExternalSegment(txn, nil)
 	ctx := context.Background()
 
-	ctx = newrelicutil.WithExternalSegment(ctx, sgm)
-	if want, have := sgm, newrelicutil.ExternalSegment(ctx); want != have {
-		t.Errorf("want %+v, have %+v", want, have)
-	}
+	ctx = newrelicutil.WithExternalSegment(ctx, want)
+	assert.Equal(t, want, newrelicutil.ExternalSegment(ctx))
 }
 
 func TestDatastoreSegment(t *testing.T) {
-	ctx := context.Background()
-
 	want := newrelic.DatastoreSegment{}
-	if have := newrelicutil.DatastoreSegment(ctx); want.StartTime != have.StartTime {
-		t.Errorf("want %#v, have %#v", want, have)
-	}
+	have := newrelicutil.DatastoreSegment(context.Background())
+	assert.Equal(t, want.StartTime, have.StartTime)
 }
 
 func TestWithDatastoreSegment(t *testing.T) {
-	nrapp := newApp()
-	txn := nrapp.StartTransaction("foo", nil, nil)
-	sgm := newrelic.DatastoreSegment{
+	txn := newApp(t).StartTransaction("foo", nil, nil)
+	sgm := &newrelic.DatastoreSegment{
 		StartTime:  newrelic.StartSegmentNow(txn),
 		Product:    newrelic.DatastoreMySQL,
 		Collection: "my_table",
 		Operation:  "SELECT",
 	}
-	ctx := context.Background()
-
-	ctx = newrelicutil.WithDatastoreSegment(ctx, sgm)
-	if want, have := sgm, newrelicutil.DatastoreSegment(ctx); want.StartTime != have.StartTime {
-		t.Errorf("want %#v, have %#v", want, have)
-	}
+	ctx := newrelicutil.WithDatastoreSegment(context.Background(), sgm)
+	assert.Equal(t, sgm.StartTime, newrelicutil.DatastoreSegment(ctx).StartTime)
 }
 
-func newApp() newrelic.Application {
+func newApp(t *testing.T) newrelic.Application {
 	config := newrelic.NewConfig("app_test", "")
 	config.Enabled = false
-	nrapp, _ := newrelic.NewApplication(config)
+	nrapp, err := newrelic.NewApplication(config)
+	require.NoError(t, err)
 	return nrapp
 }
