@@ -49,6 +49,7 @@ func Segment(ctx context.Context) *newrelic.Segment {
 	if sgm, ok := ctx.Value(segment).(*newrelic.Segment); ok {
 		return sgm
 	}
+
 	return &newrelic.Segment{}
 }
 
@@ -63,6 +64,7 @@ func ExternalSegment(ctx context.Context) *newrelic.ExternalSegment {
 	if sgm, ok := ctx.Value(externalSegment).(*newrelic.ExternalSegment); ok {
 		return sgm
 	}
+
 	return &newrelic.ExternalSegment{}
 }
 
@@ -77,6 +79,7 @@ func DatastoreSegment(ctx context.Context) *newrelic.DatastoreSegment {
 	if sgm, ok := ctx.Value(datastoreSegment).(*newrelic.DatastoreSegment); ok {
 		return sgm
 	}
+
 	return &newrelic.DatastoreSegment{}
 }
 

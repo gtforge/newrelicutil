@@ -1,6 +1,7 @@
 package nrgorilla_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -20,7 +21,7 @@ func TestInstrumentRoutes(t *testing.T) {
 	)
 
 	h := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		if have := newrelicutil.Transaction(r.Context()); nil == have {
+		if have := newrelicutil.Transaction(r.Context()); have == nil {
 			t.Errorf("want txn, have %+v", have)
 		}
 	})
@@ -29,11 +30,11 @@ func TestInstrumentRoutes(t *testing.T) {
 	r.NotFoundHandler = h
 	r = nrgorilla.InstrumentRoutes(r, nrapp)
 
-	req, _ := http.NewRequest("GET", "/api/v1/users", nil)
+	req, _ := http.NewRequestWithContext(context.Background(), "GET", "/api/v1/users", http.NoBody)
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 
-	req, _ = http.NewRequest("GET", "/404", nil)
+	req, _ = http.NewRequestWithContext(context.Background(), "GET", "/404", http.NoBody)
 	resp = httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 }
@@ -42,7 +43,7 @@ func TestRouteName(t *testing.T) {
 	r := mux.NewRouter()
 	h := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})
 
-	var tt = []struct {
+	tt := []struct {
 		route *mux.Route
 		exp   string
 	}{
@@ -60,6 +61,7 @@ func TestRouteName(t *testing.T) {
 			exp:   "",
 		},
 	}
+
 	for _, tc := range tt {
 		if want, have := tc.exp, nrgorilla.RouteName(tc.route); want != have {
 			t.Errorf("want %+v, have %+v", want, have)

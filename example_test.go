@@ -16,8 +16,8 @@ func ExampleWrapHandler() {
 	)
 
 	handler := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})
-	wrapped_handler := newrelicutil.WrapHandler(nrapp, "HandlerName", handler)
+	wrappedHandler := newrelicutil.WrapHandler(nrapp, "HandlerName", handler)
 
 	mux := http.NewServeMux()
-	mux.Handle("/some/path", wrapped_handler)
+	mux.Handle("/some/path", wrappedHandler)
 }

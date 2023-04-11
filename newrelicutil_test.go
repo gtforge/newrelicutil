@@ -29,7 +29,7 @@ func TestWrapHandler(t *testing.T) {
 		assert.NotNil(t, newrelicutil.Transaction(r.Context()))
 	})
 	wh := newrelicutil.WrapHandler(newApp(t), "foo", h)
-	req, _ := http.NewRequest("GET", "/", nil)
+	req, _ := http.NewRequestWithContext(context.Background(), "GET", "/", http.NoBody)
 	wh.ServeHTTP(httptest.NewRecorder(), req)
 }
 
@@ -71,7 +71,7 @@ func TestDatastoreSegment(t *testing.T) {
 func TestWithDatastoreSegment(t *testing.T) {
 	txn := newApp(t).StartTransaction("foo")
 	sgm := &newrelic.DatastoreSegment{
-		StartTime:  newrelic.StartSegmentNow(txn),
+		StartTime:  txn.StartSegmentNow(),
 		Product:    newrelic.DatastoreMySQL,
 		Collection: "my_table",
 		Operation:  "SELECT",
@@ -81,11 +81,14 @@ func TestWithDatastoreSegment(t *testing.T) {
 }
 
 func newApp(t *testing.T) *newrelic.Application {
+	t.Helper()
+
 	nrapp, err := newrelic.NewApplication(
 		newrelic.ConfigAppName("app_test"),
 		newrelic.ConfigEnabled(false),
 		newrelic.ConfigInfoLogger(os.Stdout),
 	)
 	require.NoError(t, err)
+
 	return nrapp
 }
