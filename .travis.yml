@@ -1,20 +1,13 @@
-dist: trusty
+dist: jammy
 sudo: false
 
 language: go
-go: [ "1.11" ]
-env:
-  global:
-  - PATH=$PATH:$HOME/gopath/bin
-  - GO111MODULE=on
+go: [ "1.18" ]
 
 before_install:
 - echo "machine github.com login $BUNDLE_GITHUB__COM" > $HOME/.netrc
 - echo "machine raw.githubusercontent.com login $BUNDLE_GITHUB__COM" >> $HOME/.netrc
 - chmod 600 $HOME/.netrc
 
-install:
-- go mod tidy
-
 script:
-- go test -race ./...
+- make test
