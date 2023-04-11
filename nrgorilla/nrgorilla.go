@@ -4,14 +4,14 @@ package nrgorilla
 import (
 	"strings"
 
-	"github.com/gettaxi/newrelicutil"
+	"github.com/gettaxi/newrelicutil/v2"
 	"github.com/gorilla/mux"
-	"github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 // InstrumentRoutes adds instrumentation to a router.
 // This must be used after the routes have been added to the router.
-func InstrumentRoutes(r *mux.Router, app newrelic.Application) *mux.Router {
+func InstrumentRoutes(r *mux.Router, app *newrelic.Application) *mux.Router {
 	r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		h := newrelicutil.WrapHandler(app, RouteName(route), route.GetHandler())
 		route.Handler(h)

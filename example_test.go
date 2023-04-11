@@ -2,15 +2,18 @@ package newrelicutil_test
 
 import (
 	"net/http"
+	"os"
 
-	"github.com/gettaxi/newrelicutil"
-	"github.com/newrelic/go-agent"
+	"github.com/gettaxi/newrelicutil/v2"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 func ExampleWrapHandler() {
-	config := newrelic.NewConfig("app_test", "")
-	config.Enabled = false
-	nrapp, _ := newrelic.NewApplication(config)
+	nrapp, _ := newrelic.NewApplication(
+		newrelic.ConfigAppName("app_test"),
+		newrelic.ConfigEnabled(false),
+		newrelic.ConfigInfoLogger(os.Stdout),
+	)
 
 	handler := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})
 	wrapped_handler := newrelicutil.WrapHandler(nrapp, "HandlerName", handler)

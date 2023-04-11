@@ -3,18 +3,21 @@ package nrgorilla_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
-	"github.com/gettaxi/newrelicutil"
-	"github.com/gettaxi/newrelicutil/nrgorilla"
+	"github.com/gettaxi/newrelicutil/v2"
+	"github.com/gettaxi/newrelicutil/v2/nrgorilla"
 	"github.com/gorilla/mux"
-	"github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 func TestInstrumentRoutes(t *testing.T) {
-	config := newrelic.NewConfig("app_test", "")
-	config.Enabled = false
-	nrapp, _ := newrelic.NewApplication(config)
+	nrapp, _ := newrelic.NewApplication(
+		newrelic.ConfigAppName("app_test"),
+		newrelic.ConfigEnabled(false),
+		newrelic.ConfigInfoLogger(os.Stdout),
+	)
 
 	h := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		if have := newrelicutil.Transaction(r.Context()); nil == have {

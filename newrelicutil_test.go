@@ -4,22 +4,22 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
+	"github.com/gettaxi/newrelicutil/v2"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/gettaxi/newrelicutil"
-	"github.com/newrelic/go-agent"
 )
 
 func TestTransaction(t *testing.T) {
-	want := newrelic.Transaction(nil)
-	have := newrelicutil.Transaction(context.Background())
-	assert.Equal(t, want, have)
+	tnx := newrelicutil.Transaction(context.Background())
+	assert.Nil(t, tnx)
 }
 
 func TestWithTransaction(t *testing.T) {
-	txn := newApp(t).StartTransaction("foo", nil, nil)
+	txn := newApp(t).StartTransaction("foo")
 	ctx := newrelicutil.WithTransaction(context.Background(), txn)
 	assert.Equal(t, txn, newrelicutil.Transaction(ctx))
 }
@@ -40,8 +40,8 @@ func TestSegment(t *testing.T) {
 }
 
 func TestWithSegment(t *testing.T) {
-	txn := newApp(t).StartTransaction("foo", nil, nil)
-	want := newrelic.StartSegment(txn, "bar")
+	txn := newApp(t).StartTransaction("foo")
+	want := txn.StartSegment("bar")
 	ctx := newrelicutil.WithSegment(context.Background(), want)
 	have := newrelicutil.Segment(ctx)
 	assert.Equal(t, want, have)
@@ -54,7 +54,7 @@ func TestExternalSegment(t *testing.T) {
 }
 
 func TestWithExternalSegment(t *testing.T) {
-	txn := newApp(t).StartTransaction("foo", nil, nil)
+	txn := newApp(t).StartTransaction("foo")
 	want := newrelic.StartExternalSegment(txn, nil)
 	ctx := context.Background()
 
@@ -69,7 +69,7 @@ func TestDatastoreSegment(t *testing.T) {
 }
 
 func TestWithDatastoreSegment(t *testing.T) {
-	txn := newApp(t).StartTransaction("foo", nil, nil)
+	txn := newApp(t).StartTransaction("foo")
 	sgm := &newrelic.DatastoreSegment{
 		StartTime:  newrelic.StartSegmentNow(txn),
 		Product:    newrelic.DatastoreMySQL,
@@ -80,10 +80,12 @@ func TestWithDatastoreSegment(t *testing.T) {
 	assert.Equal(t, sgm.StartTime, newrelicutil.DatastoreSegment(ctx).StartTime)
 }
 
-func newApp(t *testing.T) newrelic.Application {
-	config := newrelic.NewConfig("app_test", "")
-	config.Enabled = false
-	nrapp, err := newrelic.NewApplication(config)
+func newApp(t *testing.T) *newrelic.Application {
+	nrapp, err := newrelic.NewApplication(
+		newrelic.ConfigAppName("app_test"),
+		newrelic.ConfigEnabled(false),
+		newrelic.ConfigInfoLogger(os.Stdout),
+	)
 	require.NoError(t, err)
 	return nrapp
 }

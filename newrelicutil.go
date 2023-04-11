@@ -5,42 +5,42 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 type key int
 
 const (
-	transaction key = iota
-	segment
+	segment key = iota
 	externalSegment
 	datastoreSegment
 )
 
 // Transaction returns the New Relic Transaction object from context.
-func Transaction(ctx context.Context) newrelic.Transaction {
-	if txn, ok := ctx.Value(transaction).(newrelic.Transaction); ok {
-		return txn
-	}
-	return nil
+// Returns nil if the context does not contain an object.
+func Transaction(ctx context.Context) *newrelic.Transaction {
+	return newrelic.FromContext(ctx)
 }
 
 // WithTransaction puts the New Relic Transaction object to the given context
 // and returns the new context.
-func WithTransaction(ctx context.Context, txn newrelic.Transaction) context.Context {
-	return context.WithValue(ctx, transaction, txn)
+func WithTransaction(ctx context.Context, txn *newrelic.Transaction) context.Context {
+	return newrelic.NewContext(ctx, txn)
 }
 
-// WrapHandler return the given http handler that is wrapped to New Relic Transaction.
+// WrapHandler returns the given http handler that is wrapped to New Relic Transaction.
 // Current New Relic Transaction is placed in the context.
-func WrapHandler(app newrelic.Application, name string, handler http.Handler) http.Handler {
+func WrapHandler(app *newrelic.Application, name string, handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		txn := app.StartTransaction(name, w, r)
+		txn := app.StartTransaction(name)
 		defer txn.End()
 
-		ctx := WithTransaction(r.Context(), txn)
+		txn.SetWebRequestHTTP(r)
+		w = txn.SetWebResponse(w)
 
-		handler.ServeHTTP(txn, r.WithContext(ctx))
+		ctx := newrelic.NewContext(r.Context(), txn)
+
+		handler.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
