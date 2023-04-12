@@ -7,10 +7,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gettaxi/newrelicutil/v2"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/gtforge/newrelicutil/v2"
 )
 
 func TestTransaction(t *testing.T) {

@@ -34,7 +34,7 @@ linters-settings:
       - standard
       - default
       - prefix(github.com/gtforge)
-      - prefix(github.com/gtforge/newrelicutil)
+      - prefix(github.com/gtforge/newrelicutil/v2)
   dupl:
     threshold: 100
   lll:

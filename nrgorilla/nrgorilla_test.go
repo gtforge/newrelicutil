@@ -7,10 +7,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gettaxi/newrelicutil/v2"
-	"github.com/gettaxi/newrelicutil/v2/nrgorilla"
 	"github.com/gorilla/mux"
 	"github.com/newrelic/go-agent/v3/newrelic"
+
+	"github.com/gtforge/newrelicutil/v2"
+	"github.com/gtforge/newrelicutil/v2/nrgorilla"
 )
 
 func TestInstrumentRoutes(t *testing.T) {

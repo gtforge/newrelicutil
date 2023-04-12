@@ -1,4 +1,4 @@
-module github.com/gettaxi/newrelicutil/v2
+module github.com/gtforge/newrelicutil/v2
 
 go 1.19
 

@@ -28,7 +28,7 @@ format: ## Format code
 	@echo "+ $@"
 	find . -type f -name '*.go' -not -path "./vendor/*" -not -path "*_mock.go" \
 		-exec goimports -local "github.com/gtforge" -w {} \; \
-		-exec gci write -s standard -s default -s "Prefix(github.com/gtforge)" -s "Prefix(github.com/gtforge/newrelicutil)" {} \;
+		-exec gci write -s standard -s default -s "Prefix(github.com/gtforge)" -s "Prefix(github.com/gtforge/newrelicutil/v2)" {} \;
 	gofumpt -l -w .
 .PHONY: format
 

@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gettaxi/newrelicutil/v2"
 	"github.com/newrelic/go-agent/v3/newrelic"
+
+	"github.com/gtforge/newrelicutil/v2"
 )
 
 func ExampleWrapHandler() {

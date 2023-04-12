@@ -4,9 +4,10 @@ package nrgorilla
 import (
 	"strings"
 
-	"github.com/gettaxi/newrelicutil/v2"
 	"github.com/gorilla/mux"
 	"github.com/newrelic/go-agent/v3/newrelic"
+
+	"github.com/gtforge/newrelicutil/v2"
 )
 
 // InstrumentRoutes adds instrumentation to a router.
