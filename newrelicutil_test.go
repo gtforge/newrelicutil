@@ -4,22 +4,23 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/gettaxi/newrelicutil"
-	"github.com/newrelic/go-agent"
+
+	"github.com/gtforge/newrelicutil/v2"
 )
 
 func TestTransaction(t *testing.T) {
-	want := newrelic.Transaction(nil)
-	have := newrelicutil.Transaction(context.Background())
-	assert.Equal(t, want, have)
+	tnx := newrelicutil.Transaction(context.Background())
+	assert.Nil(t, tnx)
 }
 
 func TestWithTransaction(t *testing.T) {
-	txn := newApp(t).StartTransaction("foo", nil, nil)
+	txn := newApp(t).StartTransaction("foo")
 	ctx := newrelicutil.WithTransaction(context.Background(), txn)
 	assert.Equal(t, txn, newrelicutil.Transaction(ctx))
 }
@@ -29,7 +30,7 @@ func TestWrapHandler(t *testing.T) {
 		assert.NotNil(t, newrelicutil.Transaction(r.Context()))
 	})
 	wh := newrelicutil.WrapHandler(newApp(t), "foo", h)
-	req, _ := http.NewRequest("GET", "/", nil)
+	req, _ := http.NewRequestWithContext(context.Background(), "GET", "/", http.NoBody)
 	wh.ServeHTTP(httptest.NewRecorder(), req)
 }
 
@@ -40,8 +41,8 @@ func TestSegment(t *testing.T) {
 }
 
 func TestWithSegment(t *testing.T) {
-	txn := newApp(t).StartTransaction("foo", nil, nil)
-	want := newrelic.StartSegment(txn, "bar")
+	txn := newApp(t).StartTransaction("foo")
+	want := txn.StartSegment("bar")
 	ctx := newrelicutil.WithSegment(context.Background(), want)
 	have := newrelicutil.Segment(ctx)
 	assert.Equal(t, want, have)
@@ -54,7 +55,7 @@ func TestExternalSegment(t *testing.T) {
 }
 
 func TestWithExternalSegment(t *testing.T) {
-	txn := newApp(t).StartTransaction("foo", nil, nil)
+	txn := newApp(t).StartTransaction("foo")
 	want := newrelic.StartExternalSegment(txn, nil)
 	ctx := context.Background()
 
@@ -69,9 +70,9 @@ func TestDatastoreSegment(t *testing.T) {
 }
 
 func TestWithDatastoreSegment(t *testing.T) {
-	txn := newApp(t).StartTransaction("foo", nil, nil)
+	txn := newApp(t).StartTransaction("foo")
 	sgm := &newrelic.DatastoreSegment{
-		StartTime:  newrelic.StartSegmentNow(txn),
+		StartTime:  txn.StartSegmentNow(),
 		Product:    newrelic.DatastoreMySQL,
 		Collection: "my_table",
 		Operation:  "SELECT",
@@ -80,10 +81,15 @@ func TestWithDatastoreSegment(t *testing.T) {
 	assert.Equal(t, sgm.StartTime, newrelicutil.DatastoreSegment(ctx).StartTime)
 }
 
-func newApp(t *testing.T) newrelic.Application {
-	config := newrelic.NewConfig("app_test", "")
-	config.Enabled = false
-	nrapp, err := newrelic.NewApplication(config)
+func newApp(t *testing.T) *newrelic.Application {
+	t.Helper()
+
+	nrapp, err := newrelic.NewApplication(
+		newrelic.ConfigAppName("app_test"),
+		newrelic.ConfigEnabled(false),
+		newrelic.ConfigInfoLogger(os.Stdout),
+	)
 	require.NoError(t, err)
+
 	return nrapp
 }
